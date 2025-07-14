@@ -1,0 +1,5 @@
+.env
+.clinerules/*
+pycache/
+*.pyc
+__pycache__/
