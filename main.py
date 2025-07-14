@@ -1,5 +1,4 @@
 from agent import Debater, Moderator
-from debate import Debate
 from config import CONSENSUS_THRESHOLD
 
 
@@ -26,13 +25,16 @@ def main():
     # Debate setup
     topic = "Should AI be regulated?"
     format_rules = "Each debater will provide an opening statement, followed by three rounds of rebuttals. A concluding statement will end the debate."
-    moderator = Moderator(debaters, CONSENSUS_THRESHOLD)
-    debate = Debate(
-        topic=topic, debaters=debaters, format_rules=format_rules, moderator=moderator
+    
+    moderator = Moderator(
+        agents=debaters, 
+        consensus_threshold=CONSENSUS_THRESHOLD,
+        topic=topic,
+        format_rules=format_rules
     )
 
     # Run the debate
-    debate.run(max_rounds=5)
+    moderator.run(max_rounds=5)
 
 
 if __name__ == "__main__":
