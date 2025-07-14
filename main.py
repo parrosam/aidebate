@@ -1,5 +1,5 @@
 from agent import Debater, Moderator
-from config import CONSENSUS_THRESHOLD
+from config import CONSENSUS_THRESHOLD,AI_MODEL, DEBATE_TURN_DELAY
 
 
 def main():
@@ -12,6 +12,7 @@ def main():
             personality_style="Calm, articulate, and firm. Uses precise language and appeals to logic and long-term consequences. Avoids emotional appeals but can be stern when challenged on core principles.",
             motivations="To convince others of the urgent need for strong, government-enforced regulations on AI development and deployment.",
             stance="FOR",
+            ai_model=AI_MODEL,
         ),
         Debater(
             name="Julian Thorne",
@@ -19,6 +20,7 @@ def main():
             personality_style="Charismatic, optimistic, and sometimes dismissive of criticism. Tends to focus on the positive potential of AI and frames regulation as a fear-driven obstacle.",
             motivations="To defend the autonomy of the tech industry and promote a future where AI innovation is unrestricted.",
             stance="AGAINST",
+            ai_model=AI_MODEL,
         ),
     ]
 
@@ -30,11 +32,12 @@ def main():
         agents=debaters, 
         consensus_threshold=CONSENSUS_THRESHOLD,
         topic=topic,
-        format_rules=format_rules
+        format_rules=format_rules,
+        ai_model=AI_MODEL
     )
 
     # Run the debate
-    moderator.run(max_rounds=5)
+    moderator.run(turn_delay_seconds=DEBATE_TURN_DELAY, max_rounds=5)
 
 
 if __name__ == "__main__":

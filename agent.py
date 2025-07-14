@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import List, Tuple, Optional
 import google.genai as genai
 from dotenv import load_dotenv
-from config import AI_MODEL, DEBATE_TURN_DELAY
 
 load_dotenv()
 
@@ -66,6 +65,7 @@ class Debater:
         personality_style: str,
         motivations: str,
         stance: str,
+        ai_model: str
     ):
         self.name = name
         self.background_and_beliefs = background_and_beliefs
@@ -73,6 +73,7 @@ class Debater:
         self.motivations = motivations
         self.stance = stance  # The fixed, initial stance for the persona
         self.current_stance = "neutral"  # The stance as determined by the moderator, round by round
+        self.ai_model = ai_model
 
     def _construct_prompt(self, topic: str, format_rules: str, history: List[Statement], current_round_number: int) -> str:
         """Constructs the prompt for the debater."""
@@ -97,16 +98,17 @@ class Debater:
     def generate_statement(self, topic: str, format_rules: str, history: List[Statement], current_round_number: int) -> str:
         """Generates a statement based on the provided prompt."""
         prompt = self._construct_prompt(topic, format_rules, history, current_round_number)
-        response = client.models.generate_content(model=AI_MODEL, contents=prompt)
+        response = client.models.generate_content(model=self.ai_model, contents=prompt)
         return response.text.strip()
 
 
 class Moderator:
-    def __init__(self, agents: List[Debater], consensus_threshold: int, topic: str, format_rules: str):
+    def __init__(self, agents: List[Debater], consensus_threshold: int, topic: str, format_rules: str, ai_model: str):
         self.agents = agents
         self.consensus_threshold = consensus_threshold
         self.topic = topic
         self.format_rules = format_rules
+        self.ai_model = ai_model
         self.history: List[Statement] = []
 
     def check_consensus(self, statements: List[Statement]) -> Tuple[bool, Optional[str], List[str]]:
@@ -123,7 +125,7 @@ class Moderator:
         Return a comma-separated list of the stances, in the same order as the statements.
         For example: for,against,neutral,for,neutral
         """
-        response = client.models.generate_content(model=AI_MODEL, contents=prompt)
+        response = client.models.generate_content(model=self.ai_model, contents=prompt)
         stances = [s.strip() for s in response.text.split(',')]
         
         for stance in set(stances):
@@ -131,7 +133,7 @@ class Moderator:
                 return True, stance, stances
         return False, None, stances
 
-    def run(self, max_rounds: int = 10):
+    def run(self, turn_delay_seconds: int = 7, max_rounds: int = 10):
         """Runs the debate for a maximum number of rounds."""
         print(f"Debate topic: {self.topic}")
         for i in range(max_rounds):
@@ -152,7 +154,7 @@ class Moderator:
                 
                 print(f"{debater.name}: {statement_text}")
                 print("-" * 80)
-                time.sleep(DEBATE_TURN_DELAY)
+                time.sleep(turn_delay_seconds)
 
             consensus_reached, winning_stance, stances = self.check_consensus(
                 round_statements
